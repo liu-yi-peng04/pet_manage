@@ -1,0 +1,30 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# 关系数据库 ORM
+tortoise-orm==0.22.0
+aerich==0.7.2
+aiomysql==0.2.0
+cryptography>=42.0.0
+
+# 认证
+PyJWT==2.10.1
+
+# HTTP 客户端 (LLM / embedding API)
+httpx==0.28.1
+
+# 表单上传 (FastAPI File/Form)
+python-multipart==0.0.32
+
+# 向量数据库
+pymilvus==2.5.4
+
+# 文档解析
+pypdf==5.1.0
+python-docx==1.1.2
+
+# 本地 embedding (bge-m3)；体积较大，改用 API 时可不装
+sentence-transformers==3.3.1
+numpy>=1.26.0

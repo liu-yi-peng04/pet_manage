@@ -1,0 +1,45 @@
+# 依赖与虚拟环境
+node_modules/
+frontend/node_modules/
+backend/.venv/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 构建产物
+dist/
+frontend/dist/
+build/
+*.local
+
+# 密钥与本地环境（切勿提交）
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+
+# IDE / 系统
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# 运行期上传与日志
+uploads/
+backend/uploads/
+*.log
+npm-debug.log*
+
+# 打包临时文件
+*.tar
+*.tar.gz
+*.zip
+
+docs_src/
