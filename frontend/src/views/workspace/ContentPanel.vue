@@ -154,14 +154,15 @@ defineExpose({ reload });
 </script>
 
 <template>
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+  <div>
+  <div class="panel-toolbar">
     <div>
       <b>{{ storeKb?.name ?? "本店内容库" }}</b>
       <span class="text-muted" style="margin-left: 8px; font-size: 12px">
         店内制度/条款/商品说明/SOP，供店员问答与培训
       </span>
     </div>
-    <el-button type="primary" size="small" :loading="uploading" @click="pickKbFile">上传文档</el-button>
+    <el-button type="primary" size="small" round :loading="uploading" @click="pickKbFile">上传文档</el-button>
     <input
       ref="kbFileInput"
       type="file"
@@ -171,9 +172,12 @@ defineExpose({ reload });
     />
   </div>
 
-  <el-table v-loading="kbLoading" :data="kbDocs" style="width: 100%">
+  <div class="sheet" v-loading="kbLoading">
+  <el-table v-if="kbDocs.length" :data="kbDocs" style="width: 100%">
     <el-table-column prop="filename" label="文档" min-width="220" />
-    <el-table-column prop="file_type" label="类型" width="90" />
+    <el-table-column prop="file_type" label="类型" width="90">
+      <template #default="{ row }"><span class="meta-cell">{{ row.file_type }}</span></template>
+    </el-table-column>
     <el-table-column label="状态" width="110">
       <template #default="{ row }">
         <el-tag size="small" :type="row.status === 'indexed' ? 'success' : 'info'" effect="plain">
@@ -182,7 +186,7 @@ defineExpose({ reload });
       </template>
     </el-table-column>
     <el-table-column label="上传时间" width="180">
-      <template #default="{ row }">{{ fmtDate(row.created_at) }}</template>
+      <template #default="{ row }"><span class="meta-cell">{{ fmtDate(row.created_at) }}</span></template>
     </el-table-column>
     <el-table-column label="操作" width="90" align="right">
       <template #default="{ row }">
@@ -190,7 +194,13 @@ defineExpose({ reload });
       </template>
     </el-table-column>
   </el-table>
-  <el-empty v-if="!kbLoading && !kbDocs.length" description="尚未上传文档，上传后店员可据此问答" :image-size="70" />
+  <el-empty v-else-if="!kbLoading" class="soft-empty" :image-size="84">
+    <template #description>
+      <p class="empty-title">尚未上传文档</p>
+      <p class="empty-desc">上传制度或 SOP 后，店员可以据此提问。</p>
+    </template>
+  </el-empty>
+  </div>
 
   <el-divider content-position="left">店内 AI（与用户端隔离）</el-divider>
   <el-alert
@@ -208,9 +218,9 @@ defineExpose({ reload });
     style="margin-bottom: 12px"
     title="回答需要一点时间，可先处理预约或订单，稍后再回来查看。"
   />
-  <div>
-    <div v-for="(m, i) in kbMsgs" :key="i" style="margin-bottom: 10px">
-      <div style="font-size: 12px; color: #909399; margin-bottom: 2px">
+  <div class="kb-chat">
+    <div v-for="(m, i) in kbMsgs" :key="i" class="kb-bubble" :class="m.role">
+      <div class="kb-who">
         {{ kbRoleLabel(m.role) }}
         <el-tag
           v-for="(t, ti) in m.tools"
@@ -221,9 +231,14 @@ defineExpose({ reload });
           style="margin-left: 6px"
         >{{ t }}</el-tag>
       </div>
-      <div style="white-space: pre-wrap">{{ m.text }}</div>
+      <div class="kb-text">{{ m.text }}</div>
     </div>
-    <el-empty v-if="!kbMsgs.length" description="问寄养收费、售宠话术、退换货 SOP，将检索本店内容库" :image-size="60" />
+    <el-empty v-if="!kbMsgs.length" class="soft-empty" :image-size="72">
+      <template #description>
+        <p class="empty-title">还没有店内提问</p>
+        <p class="empty-desc">可以问寄养收费、售宠话术、退换货 SOP，将检索本店内容库。</p>
+      </template>
+    </el-empty>
     <div style="display: flex; gap: 8px; margin-top: 12px">
       <el-input
         v-model="kbQ"
@@ -241,5 +256,6 @@ defineExpose({ reload });
       style="margin-top: 6px"
       @click="clearKbChat"
     >清空对话</el-button>
+  </div>
   </div>
 </template>

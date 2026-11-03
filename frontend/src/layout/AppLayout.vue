@@ -67,7 +67,6 @@ function goRoute(path: string) {
 
 const layout = { display: "flex", height: "100vh", overflow: "hidden" };
 const sidebar = {
-  width: "220px",
   background: "var(--app-sidebar-bg)",
   color: "var(--app-sidebar-text)",
   display: "flex",
@@ -126,7 +125,7 @@ const userBar = {
 
 <template>
   <div :style="layout">
-    <aside :style="sidebar">
+    <aside class="app-sidebar" :class="{ 'is-collapsed': appStore.sidebarCollapsed }" :style="sidebar">
       <div :style="logoBar">
         <span
           style="
@@ -143,7 +142,10 @@ const userBar = {
           "
           >宠</span
         >
-        <span v-if="!appStore.sidebarCollapsed" :style="{ ...logoText, fontFamily: 'Outfit, Noto Sans SC, sans-serif' }"
+        <span
+          v-if="!appStore.sidebarCollapsed"
+          class="logo-word"
+          :style="{ ...logoText, fontFamily: 'Outfit, Noto Sans SC, sans-serif' }"
           >宠智联</span
         >
       </div>
@@ -156,13 +158,13 @@ const userBar = {
           @click="goRoute(item.path)"
         >
           <el-icon :size="18"><component :is="item.icon" /></el-icon>
-          <span v-if="!appStore.sidebarCollapsed">{{ item.label }}</span>
+          <span v-if="!appStore.sidebarCollapsed" class="nav-label">{{ item.label }}</span>
         </div>
       </nav>
 
       <div :style="sidebarFooter" @click="appStore.toggleSidebar()">
         <el-icon :size="16" style="color: var(--app-sidebar-text)"><component :is="appStore.sidebarCollapsed ? 'Expand' : 'Fold'" /></el-icon>
-        <span v-if="!appStore.sidebarCollapsed">收起菜单</span>
+        <span v-if="!appStore.sidebarCollapsed" class="collapse-label">收起菜单</span>
       </div>
     </aside>
 
@@ -182,7 +184,7 @@ const userBar = {
             <el-avatar :size="28" style="background: #2563eb">
               {{ userStore.username.slice(0, 1).toUpperCase() }}
             </el-avatar>
-            <span>{{ userStore.username }}</span>
+            <span class="header-name">{{ userStore.username }}</span>
             <el-tag v-if="userStore.isAdmin" size="small" type="danger" effect="dark" style="line-height: 18px; height: 18px">超管</el-tag>
             <el-tag v-else-if="userStore.isOperator" size="small" type="success" effect="dark" style="line-height: 18px; height: 18px">运营者</el-tag>
             <el-tag v-else-if="userStore.isTrainer" size="small" type="success" effect="plain" style="line-height: 18px; height: 18px">训犬师</el-tag>
@@ -212,3 +214,23 @@ const userBar = {
     </div>
   </div>
 </template>
+
+<style scoped>
+.app-sidebar {
+  width: 220px;
+}
+.app-sidebar.is-collapsed {
+  width: 72px;
+}
+@media (max-width: 860px) {
+  .app-sidebar {
+    width: 72px;
+  }
+  .logo-word,
+  .nav-label,
+  .collapse-label,
+  .header-name {
+    display: none;
+  }
+}
+</style>

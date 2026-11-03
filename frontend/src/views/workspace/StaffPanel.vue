@@ -72,15 +72,18 @@ defineExpose({ reload });
 </script>
 
 <template>
-  <div style="display: flex; justify-content: flex-end; margin-bottom: 12px">
-    <el-button type="primary" size="small" @click="showStaffDialog = true">
+  <div>
+  <div class="panel-toolbar">
+    <span class="meta-cell">协作账号，一起处理本店预约与订单</span>
+    <el-button type="primary" size="small" round @click="showStaffDialog = true">
       <el-icon style="margin-right: 4px"><Plus /></el-icon>添加店员
     </el-button>
   </div>
-  <el-table v-loading="staffLoading" :data="staffList" style="width: 100%">
+  <div class="sheet" v-loading="staffLoading">
+  <el-table v-if="staffList.length" :data="staffList" style="width: 100%">
     <el-table-column prop="username" label="用户名" min-width="140" />
     <el-table-column prop="email" label="邮箱" min-width="160">
-      <template #default="{ row }">{{ row.email || "—" }}</template>
+      <template #default="{ row }"><span class="meta-cell">{{ row.email || "—" }}</span></template>
     </el-table-column>
     <el-table-column label="身份" width="110">
       <template #default="{ row }">
@@ -101,7 +104,14 @@ defineExpose({ reload });
       </template>
     </el-table-column>
   </el-table>
-  <el-empty v-if="!staffLoading && !staffList.length" description="暂无店员" :image-size="70" />
+  <el-empty v-else-if="!staffLoading" class="soft-empty" :image-size="84">
+    <template #description>
+      <p class="empty-title">暂无店员</p>
+      <p class="empty-desc">添加后，店员可以用自己的账号处理本店预约和订单。</p>
+    </template>
+  </el-empty>
+  </div>
+  </div>
 
   <el-dialog v-model="showStaffDialog" title="添加店员" width="480px">
     <el-form label-position="top">

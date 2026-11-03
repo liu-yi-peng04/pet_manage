@@ -242,20 +242,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="page-container" v-loading="loading">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px">
-      <div>
-        <h2 style="margin: 0 0 4px">
+  <div class="page-container ws-page" v-loading="loading">
+    <header class="ws-mast">
+      <div class="ws-badge" aria-hidden="true">{{ isHospital ? "医" : "店" }}</div>
+      <div class="ws-mast-copy">
+        <p class="page-kicker">{{ isHospital ? "医院工作台" : "门店工作台" }}</p>
+        <h2 class="page-title">
           {{ storeName }}
-          <el-tag size="small" style="margin-left: 8px; vertical-align: middle">
+          <el-tag size="small" effect="plain" round class="ws-type">
             {{ STORE_TYPES[storeType] ?? storeType }}
           </el-tag>
         </h2>
-        <p class="text-muted" style="margin: 0; font-size: 13px">{{ workspaceSubtitle }}</p>
+        <p class="page-sub">{{ workspaceSubtitle }}</p>
       </div>
-    </div>
+    </header>
 
-    <el-tabs v-model="activeTab" @tab-change="onTabChange">
+    <div class="ws-board">
+    <el-tabs v-model="activeTab" class="ws-tabs" @tab-change="onTabChange">
       <el-tab-pane label="门店概览" name="overview">
         <OverviewPanel
           :overview="overview"
@@ -305,5 +308,171 @@ onUnmounted(() => {
         <ContentPanel ref="contentRef" />
       </el-tab-pane>
     </el-tabs>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.ws-mast {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 18px 20px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--app-brand) 28%, var(--app-surface)), var(--app-surface) 42%);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  box-shadow: var(--app-shadow);
+}
+.ws-badge {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+  color: #1a1a1a;
+  background: linear-gradient(145deg, #ffe56a, #ff7a1a);
+  box-shadow: 0 10px 20px rgba(255, 122, 26, 0.25);
+}
+.ws-mast .page-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ws-mast .page-sub {
+  margin-bottom: 0;
+}
+.ws-type {
+  font-weight: 700;
+}
+.ws-board {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  box-shadow: var(--app-shadow);
+  padding: 4px 16px 18px;
+}
+.ws-board :deep(.el-tabs__header) {
+  margin-bottom: 14px;
+}
+.ws-board :deep(.el-tabs__item) {
+  height: 48px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.ws-board :deep(.el-tabs__active-bar) {
+  height: 3px;
+  border-radius: 3px;
+}
+.ws-board :deep(.el-alert) {
+  border-radius: 12px;
+}
+.ws-board :deep(.panel-toolbar),
+.ws-board :deep(.panel-form) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--app-bg) 70%, var(--app-surface));
+}
+.ws-board :deep(.panel-form) {
+  justify-content: flex-start;
+}
+.ws-board :deep(.sheet) {
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--app-surface);
+  min-height: 120px;
+}
+.ws-board :deep(.el-table) {
+  --el-table-border-color: transparent;
+  --el-table-header-bg-color: color-mix(in srgb, var(--app-primary) 6%, var(--app-surface));
+  --el-table-tr-bg-color: var(--app-surface);
+  --el-table-row-hover-bg-color: var(--app-primary-soft);
+}
+.ws-board :deep(.el-table th.el-table__cell) {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--app-text-muted);
+  background: color-mix(in srgb, var(--app-primary) 7%, var(--app-surface));
+}
+.ws-board :deep(.el-table td.el-table__cell) {
+  padding-top: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--app-border) 80%, transparent);
+  color: var(--app-text);
+}
+.ws-board :deep(.el-table .cell) {
+  line-height: 1.55;
+}
+.ws-board :deep(.el-table__inner-wrapper::before) {
+  display: none;
+}
+.ws-board :deep(.soft-empty) {
+  margin: 8px;
+  padding: 20px 8px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--app-bg) 55%, var(--app-surface));
+}
+.ws-board :deep(.kb-chat) {
+  margin-top: 8px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--app-border);
+  background: color-mix(in srgb, var(--app-bg) 45%, var(--app-surface));
+}
+.ws-board :deep(.kb-bubble) {
+  max-width: min(640px, 100%);
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+}
+.ws-board :deep(.kb-bubble.user) {
+  margin-left: auto;
+  background: var(--app-primary-soft);
+  border-color: transparent;
+}
+.ws-board :deep(.kb-who) {
+  font-size: 12px;
+  color: var(--app-text-muted);
+  margin-bottom: 4px;
+}
+.ws-board :deep(.kb-text) {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+.ws-board :deep(.meta-cell) {
+  color: var(--app-text-secondary);
+  font-size: 13px;
+}
+.ws-board :deep(.money-cell) {
+  font-family: "Outfit", sans-serif;
+  font-weight: 700;
+  color: var(--app-primary);
+}
+@media (max-width: 720px) {
+  .ws-mast {
+    align-items: flex-start;
+    padding: 16px;
+  }
+  .ws-board {
+    padding: 4px 10px 14px;
+  }
+  .ws-board :deep(.el-tabs__item) {
+    padding: 0 10px;
+  }
+}
+</style>

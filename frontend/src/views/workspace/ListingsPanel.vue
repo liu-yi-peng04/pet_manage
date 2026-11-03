@@ -60,6 +60,7 @@ defineExpose({ reload });
 </script>
 
 <template>
+  <div>
   <el-alert
     type="info"
     :closable="false"
@@ -67,7 +68,7 @@ defineExpose({ reload });
     style="margin-bottom: 12px"
     title="本店代售/待售宠（上架管理）。用户端「选宠市场」是浏览与咨询入口，展示卡片与本表字段侧重点不同。"
   />
-  <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap">
+  <div class="panel-form">
     <el-input v-model="listingForm.name" placeholder="名字" style="width: 120px" />
     <el-input v-model="listingForm.breed" placeholder="品种" style="width: 120px" />
     <el-input-number v-model="listingForm.age_months" :min="0" placeholder="月龄" />
@@ -81,20 +82,37 @@ defineExpose({ reload });
     <el-button :loading="listingUploading" @click="listingPhotoInput?.click()">上传照片</el-button>
     <input ref="listingPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" style="display: none" @change="onListingPhoto" />
     <img v-if="listingForm.image_url" :src="mediaSrc(listingForm.image_url)" alt="预览" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px" />
-    <el-button type="primary" @click="addListing">上架</el-button>
+    <el-button type="primary" round @click="addListing">上架</el-button>
   </div>
-  <el-table v-loading="listingLoading" :data="listings">
-    <el-table-column label="照片" width="70">
+  <div class="sheet" v-loading="listingLoading">
+  <el-table v-if="listings.length" :data="listings">
+    <el-table-column label="照片" width="76">
       <template #default="{ row }">
-        <img v-if="row.image_url" :src="mediaSrc(row.image_url)" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px" />
+        <img v-if="row.image_url" :src="mediaSrc(row.image_url)" alt="" style="width: 44px; height: 44px; object-fit: cover; border-radius: 10px" />
         <span v-else class="text-muted">—</span>
       </template>
     </el-table-column>
     <el-table-column prop="name" label="名字" />
-    <el-table-column prop="breed" label="品种" />
-    <el-table-column prop="age_months" label="月龄" width="80" />
+    <el-table-column prop="breed" label="品种">
+      <template #default="{ row }"><span class="meta-cell">{{ row.breed || "—" }}</span></template>
+    </el-table-column>
+    <el-table-column prop="age_months" label="月龄" width="80">
+      <template #default="{ row }"><span class="meta-cell">{{ row.age_months }}</span></template>
+    </el-table-column>
     <el-table-column prop="appearance" label="品相" width="80" />
-    <el-table-column prop="price" label="价格" />
-    <el-table-column prop="vaccine_note" label="疫苗" />
+    <el-table-column prop="price" label="价格">
+      <template #default="{ row }"><span class="money-cell">{{ row.price != null ? `¥${row.price}` : "面议" }}</span></template>
+    </el-table-column>
+    <el-table-column prop="vaccine_note" label="疫苗">
+      <template #default="{ row }"><span class="meta-cell">{{ row.vaccine_note || "—" }}</span></template>
+    </el-table-column>
   </el-table>
+  <el-empty v-else-if="!listingLoading" class="soft-empty" :image-size="84">
+    <template #description>
+      <p class="empty-title">还没有待售宠物</p>
+      <p class="empty-desc">填写上方信息并上架后，会出现在选宠市场。</p>
+    </template>
+  </el-empty>
+  </div>
+  </div>
 </template>

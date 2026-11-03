@@ -113,24 +113,29 @@ defineExpose({ reload });
 </script>
 
 <template>
-  <div style="display: flex; justify-content: flex-end; margin-bottom: 12px">
-    <el-button type="primary" size="small" @click="openAddProduct">
+  <div>
+  <div class="panel-toolbar">
+    <span class="meta-cell">在售商品会出现在用户端用品商城</span>
+    <el-button type="primary" size="small" round @click="openAddProduct">
       <el-icon style="margin-right: 4px"><Plus /></el-icon>上架商品
     </el-button>
   </div>
-  <el-table v-loading="productLoading" :data="products" style="width: 100%">
+  <div class="sheet" v-loading="productLoading">
+  <el-table v-if="products.length" :data="products" style="width: 100%">
     <el-table-column prop="name" label="名称" min-width="160" />
     <el-table-column label="分类" width="100">
       <template #default="{ row }">{{ catLabel(row.category) }}</template>
     </el-table-column>
     <el-table-column label="价格" width="100">
-      <template #default="{ row }">{{ row.price != null ? `¥${row.price}` : "面议" }}</template>
+      <template #default="{ row }">
+        <span class="money-cell">{{ row.price != null ? `¥${row.price}` : "面议" }}</span>
+      </template>
     </el-table-column>
     <el-table-column label="适用" width="90">
       <template #default="{ row }">{{ speciesLabel(row.species) }}</template>
     </el-table-column>
     <el-table-column label="规格" min-width="130">
-      <template #default="{ row }">{{ row.spec || "—" }}</template>
+      <template #default="{ row }"><span class="meta-cell">{{ row.spec || "—" }}</span></template>
     </el-table-column>
     <el-table-column label="状态" width="90">
       <template #default="{ row }">
@@ -146,7 +151,14 @@ defineExpose({ reload });
       </template>
     </el-table-column>
   </el-table>
-  <el-empty v-if="!productLoading && !products.length" description="本店暂无商品" :image-size="70" />
+  <el-empty v-else-if="!productLoading" class="soft-empty" :image-size="84">
+    <template #description>
+      <p class="empty-title">本店暂无商品</p>
+      <p class="empty-desc">上架后，顾客可以在用品商城看到并下单。</p>
+    </template>
+  </el-empty>
+  </div>
+  </div>
 
   <el-dialog v-model="showProductDialog" :title="editingPid ? '编辑商品' : '上架商品'" width="560px">
     <el-form label-position="top">
