@@ -13,4 +13,4 @@
 |------|------|
 | `kb_docs_pet/` | 养宠公共语料，供知识库导入 |
 | `kb_docs/` | 第三方参考语料（LangChain/LangGraph 等） |
-| `cs-agent-design/` `pet-health-design/` | 早期 HTML 线框，非现行实现说明 |
+| `cs-agent-design/` `pet-health-design/` | 早期 HTML 线框，**status: outdated**。各目录 README 说明与现行路由的差距，不是实现依据 |
