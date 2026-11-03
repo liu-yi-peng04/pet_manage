@@ -38,9 +38,13 @@ services:
     build: ./backend
     container_name: ai-kb-backend
     environment:
+      # 这是演示编排。生产部署必须 APP_ENV=production，并注入独立的 SECRET_KEY / DATABASE_URL。
+      APP_ENV: demo
       DATABASE_URL: mysql://root:123456@mysql:3306/ai_kb
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
       MILVUS_HOST: milvus
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      MEDIA_STORAGE: db
     ports:
       - "8000:8000"
     depends_on:

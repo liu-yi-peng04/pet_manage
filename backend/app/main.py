@@ -19,94 +19,64 @@ from app.api.workspace import router as workspace_router
 from app.api.marketplace import router as marketplace_router
 from app.api.orders import router as orders_router
 from app.api.media import router as media_router
+from app.core.legacy_schema import apply_legacy_column_guards, assert_aerich_baseline
+from app.core.runtime_config import (
+    assert_production_admin_password,
+    demo_admin_password,
+    demo_user_password,
+    is_demo_mode,
+)
 from app.core.config import get_settings
+from app.core.tortoise_config import CORS_ORIGINS, TORTOISE_ORM
 
+# tortoise_config 导入时已按环境补齐演示默认值，或在生产配置非法时直接失败
 settings = get_settings()
 
-TORTOISE_CONFIG = {
-    "connections": {"default": settings.DATABASE_URL},
-    "apps": {"models": {"models": ["app.models.models"], "default_connection": "default"}},
-}
 
-
-async def bootstrap():
-    """启动初始化: 确保超管账号存在并具备 admin 角色，创建系统公共知识库。"""
+async def ensure_admin():
+    """确保超管存在。生产环境不使用演示口令，也不覆盖已有密码。"""
     from app.core.security import hash_password
-    from app.models.models import KnowledgeBase, User
-    from tortoise import connections
+    from app.models.models import User
 
-    # 兼容旧库：会话端隔离字段；预约表训犬师外键
-    try:
-        conn = connections.get("default")
-        await conn.execute_query(
-            "ALTER TABLE conversation ADD COLUMN channel VARCHAR(32) NOT NULL DEFAULT 'user'"
-        )
-    except Exception:
-        pass
-    try:
-        conn = connections.get("default")
-        await conn.execute_query(
-            "ALTER TABLE appointment ADD COLUMN trainer_id INT NULL"
-        )
-    except Exception:
-        pass
-    # 训犬师信任材料字段
-    for sql in (
-        "ALTER TABLE trainerprofile ADD COLUMN avatar_url VARCHAR(500) NULL",
-        "ALTER TABLE trainerprofile ADD COLUMN experience LONGTEXT NULL",
-        "ALTER TABLE trainerprofile ADD COLUMN cert_note LONGTEXT NULL",
-        "ALTER TABLE trainerprofile ADD COLUMN proof_images LONGTEXT NULL",
-    ):
-        try:
-            conn = connections.get("default")
-            await conn.execute_query(sql)
-        except Exception:
-            pass
-    try:
-        conn = connections.get("default")
-        await conn.execute_query(
-            "UPDATE trainerprofile SET experience=COALESCE(experience,'')"
-        )
-        await conn.execute_query(
-            "UPDATE trainerprofile SET cert_note=COALESCE(cert_note,'')"
-        )
-        await conn.execute_query(
-            "UPDATE trainerprofile SET proof_images=COALESCE(NULLIF(proof_images,''),'[]')"
-        )
-    except Exception:
-        pass
-
-    # 演示训犬师补齐经历文案（仅空时写入，不覆盖已编辑内容）
-    try:
-        from app.models.models import TrainerProfile as TP
-
-        demo_t = await TP.filter(display_name="林教练").first()
-        if demo_t and not (demo_t.experience or "").strip():
-            demo_t.experience = (
-                "2018-2020 宠物门店助教，负责幼犬社会化课程\n"
-                "2020-2023 独立上门训犬，累计个案 200+\n"
-                "2023至今 专注行为矫正与服从巩固，服务上海主城区"
-            )
-            demo_t.cert_note = demo_t.cert_note or "CPDT-KA 犬类训练师认证；市民犬文明养犬指导员"
-            await demo_t.save(update_fields=["experience", "cert_note"])
-    except Exception:
-        pass
-
-    # 1. 超管账号
     admin_name = settings.SUPER_ADMIN_USERNAME
     admin = await User.filter(username=admin_name).first()
+    if is_demo_mode(settings):
+        if admin:
+            if admin.role != "admin":
+                admin.role = "admin"
+                await admin.save(update_fields=["role"])
+        else:
+            admin = await User.create(
+                username=admin_name,
+                email=f"{admin_name}@local",
+                hashed_password=hash_password(demo_admin_password(settings)),
+                role="admin",
+            )
+            print(f"[bootstrap] 演示模式已创建超管 {admin_name}（口令未写入日志）")
+        return admin
+
     if admin:
         if admin.role != "admin":
             admin.role = "admin"
             await admin.save(update_fields=["role"])
-    else:
-        admin = await User.create(
-            username=admin_name,
-            email=f"{admin_name}@local",
-            hashed_password=hash_password("admin123"),
-            role="admin",
-        )
-        print(f"[bootstrap] 已自动创建超管账号: {admin_name} / admin123（请尽快修改密码）")
+        return admin
+
+    assert_production_admin_password(settings.SUPER_ADMIN_PASSWORD)
+    admin = await User.create(
+        username=admin_name,
+        email=f"{admin_name}@local",
+        hashed_password=hash_password(settings.SUPER_ADMIN_PASSWORD),
+        role="admin",
+    )
+    print(f"[bootstrap] 已按环境变量创建超管 {admin_name}")
+    return admin
+
+
+async def bootstrap():
+    """启动初始化: 确保超管账号存在并具备 admin 角色，创建系统公共知识库。"""
+    from app.models.models import KnowledgeBase
+
+    admin = await ensure_admin()
 
     # 2. 系统公共知识库（owner = 超管）
     public_kb = await KnowledgeBase.filter(name=settings.PUBLIC_KB_NAME, is_public=True).first()
@@ -119,13 +89,18 @@ async def bootstrap():
         )
         print(f"[bootstrap] 已创建公共知识库: {settings.PUBLIC_KB_NAME}")
 
-    await _seed_demo()
+    if is_demo_mode(settings):
+        await _seed_demo()
+    else:
+        print("[bootstrap] 生产模式：跳过演示种子与演示口令重置")
 
 
 async def _seed_demo():
-    """补齐演示资源：城市、待售宠物、训犬师，避免空平台。"""
+    """补齐演示资源：城市、待售宠物、训犬师，避免空平台。仅演示模式调用。"""
     from app.core.security import hash_password
     from app.models.models import PetListing, Store, TrainerProfile, User
+
+    demo_pwd = hash_password(demo_user_password(settings))
 
     stores = await Store.all()
     if stores and not stores[0].city:
@@ -302,7 +277,7 @@ async def _seed_demo():
             tuser = await User.create(
                 username="trainer_demo",
                 email="trainer@local",
-                hashed_password=hash_password("Passw0rd!a"),
+                hashed_password=demo_pwd,
                 role="trainer",
             )
         await TrainerProfile.create(
@@ -324,10 +299,9 @@ async def _seed_demo():
             verified=True,
         )
 
-    # 固定演示身份（密码 Passw0rd!a）
+    # 固定演示身份。口令只在演示模式解析，生产路径到不了这里。
     shop = await Store.filter(store_type="shop").first()
     hospital = await Store.filter(store_type="hospital").first()
-    demo_pwd = hash_password("Passw0rd!a")
     for uname, role, extra in [
         ("demo_user", "user", {}),
         ("storeA_mgr", "staff", {"staff_role": "manager", "store_id": shop.id if shop else None}),
@@ -375,11 +349,37 @@ async def _seed_demo():
             b.hashed_password = demo_pwd
             await b.save()
 
+    # 已有演示训犬师若经历为空则补文案，不覆盖后台改过的内容
+    try:
+        demo_t = await TrainerProfile.filter(display_name="林教练").first()
+        if demo_t and not (demo_t.experience or "").strip():
+            demo_t.experience = (
+                "2018-2020 宠物门店助教，负责幼犬社会化课程\n"
+                "2020-2023 独立上门训犬，累计个案 200+\n"
+                "2023至今 专注行为矫正与服从巩固，服务上海主城区"
+            )
+            demo_t.cert_note = demo_t.cert_note or "CPDT-KA 犬类训练师认证；市民犬文明养犬指导员"
+            await demo_t.save(update_fields=["experience", "cert_note"])
+    except Exception:
+        pass
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await Tortoise.init(config=TORTOISE_CONFIG)
-    await Tortoise.generate_schemas()
+    from tortoise import connections
+
+    await Tortoise.init(config=TORTOISE_ORM)
+    if is_demo_mode(settings):
+        # 演示库可能尚未跑过 aerich。safe 建表只补缺失表，不删数据。
+        if settings.DEMO_AUTO_SCHEMA:
+            await Tortoise.generate_schemas()
+            await apply_legacy_column_guards(connections.get("default"))
+            print("[bootstrap] 演示模式已执行 generate_schemas 与缺列补丁")
+        else:
+            print("[bootstrap] 演示模式已关闭自动建表，假定结构由 aerich 维护")
+    else:
+        # 生产环境禁止启动期 DDL。表结构以 migrations 为准。
+        await assert_aerich_baseline(connections.get("default"))
     await bootstrap()
     yield
     await Tortoise.close_connections()
@@ -389,7 +389,7 @@ app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )

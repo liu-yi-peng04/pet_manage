@@ -2,6 +2,8 @@
 
 可重复跑的版本在 backend/tests/，用 pytest + 一次性 SQLite，不依赖本机服务。
 见 backend/tests/缺口清单.md。
+
+需要后端以 APP_ENV=demo 启动，否则演示账号不会被种子写入。
 """
 
 import json

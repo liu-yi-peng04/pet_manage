@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { mediaSrc } from "@/api/media";
 import { storeApi, type Product, type Store } from "@/api/store";
 import { ordersApi } from "@/api/orders";
 import { useUserStore } from "@/stores/user";
@@ -316,7 +317,7 @@ async function submitBuy() {
               <div style="height: 140px; background: #f3f4f6">
                 <img
                   v-if="p.image_url"
-                  :src="p.image_url"
+                  :src="mediaSrc(p.image_url)"
                   :alt="p.name"
                   style="width: 100%; height: 100%; object-fit: cover; display: block"
                   loading="lazy"

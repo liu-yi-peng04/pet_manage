@@ -66,7 +66,11 @@ class ChatMessage(Model):
 
 
 class MediaAsset(Model):
-    """上传的图片以 Base64 文本存入数据库，通过 /api/media/{id} 读取。"""
+    """上传的图片默认以 Base64 写入 data_b64。
+
+    MEDIA_STORAGE=filesystem 时，data_b64 改为 storage:filesystem:<相对路径> 指针。
+    读取端两种格式都认，因此不必在本迭代搬迁历史数据。
+    """
 
     id = fields.IntField(pk=True)
     owner = fields.ForeignKeyField("models.User", related_name="media_assets", null=True)

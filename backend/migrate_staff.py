@@ -1,7 +1,26 @@
+"""旧库手工补列。常规请在 backend 目录执行 aerich upgrade，不要在应用启动时调用。
+
+本脚本不再内置数据库口令。请先设置 DATABASE_URL。
+"""
+import os
+from urllib.parse import unquote, urlparse
+
 import pymysql
 
+raw = os.environ.get("DATABASE_URL", "").strip()
+if not raw:
+    raise SystemExit("请设置 DATABASE_URL。本脚本不再内置演示数据库口令。")
+parsed = urlparse(raw)
+if parsed.scheme not in {"mysql", "mysql+aiomysql"}:
+    raise SystemExit("仅支持 mysql DATABASE_URL")
+
 conn = pymysql.connect(
-    host="127.0.0.1", port=3306, user="root", password="123456", db="ai_kb", charset="utf8mb4"
+    host=parsed.hostname or "127.0.0.1",
+    port=parsed.port or 3306,
+    user=unquote(parsed.username or ""),
+    password=unquote(parsed.password or ""),
+    db=(parsed.path or "/").lstrip("/"),
+    charset="utf8mb4",
 )
 cur = conn.cursor()
 
