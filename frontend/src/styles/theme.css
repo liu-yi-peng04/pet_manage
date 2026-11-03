@@ -84,9 +84,110 @@ a {
 }
 
 .page-container {
-  padding: 16px 20px 28px;
+  padding: 18px 22px 36px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+@media (max-width: 720px) {
+  .page-container {
+    padding: 12px 12px 28px;
+  }
+}
+
+/* 三页共用的页头条与分组底 */
+.page-mast {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 18px 20px 16px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  box-shadow: var(--app-shadow);
+  position: relative;
+  overflow: hidden;
+}
+.page-mast::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(180deg, var(--app-brand), var(--app-primary));
+}
+.page-kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--app-primary);
+}
+.page-mast .page-title {
+  margin-bottom: 4px;
+}
+.page-mast .page-sub {
+  margin: 0;
+  max-width: 560px;
+}
+.mast-count {
+  min-width: 108px;
+  text-align: center;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: var(--app-primary-soft);
+  flex-shrink: 0;
+}
+.mast-count strong {
+  display: block;
+  font-family: "Outfit", "Noto Sans SC", sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--app-primary);
+}
+.mast-count span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--app-text-secondary);
+}
+
+.section-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  box-shadow: var(--app-shadow);
+  padding: 6px 16px 16px;
+  margin-top: 16px;
+}
+.section-card > .section-head:first-child {
+  margin-top: 12px;
+}
+
+.soft-empty {
+  padding: 8px 0 4px;
+}
+.soft-empty .empty-title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--app-text);
+}
+.soft-empty .empty-desc {
+  margin: 0 auto;
+  max-width: 360px;
+  color: var(--app-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .page-mast {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .page-title {

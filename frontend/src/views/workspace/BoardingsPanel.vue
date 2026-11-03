@@ -31,6 +31,7 @@ defineExpose({ reload });
 </script>
 
 <template>
+  <div>
   <el-alert
     type="info"
     :closable="false"
@@ -38,7 +39,7 @@ defineExpose({ reload });
     style="margin-bottom: 12px"
     title="这里是用户预约寄养到本店的宠物排期。商家没有「我的宠物」，也不在此发起预约——只接收并处理。"
   />
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+  <div class="panel-toolbar">
     <el-radio-group v-model="boardingFilter" @change="reload">
       <el-radio-button value="">全部</el-radio-button>
       <el-radio-button value="pending">待确认</el-radio-button>
@@ -47,13 +48,21 @@ defineExpose({ reload });
       <el-radio-button value="cancelled">已取消</el-radio-button>
     </el-radio-group>
   </div>
-  <el-table v-loading="boardingLoading" :data="boardings" style="width: 100%">
+  <div class="sheet" v-loading="boardingLoading">
+  <el-table v-if="boardings.length" :data="boardings" style="width: 100%">
     <el-table-column prop="start_date" label="入住" width="110" />
     <el-table-column prop="end_date" label="离店" width="110" />
-    <el-table-column prop="user_id" label="客户 ID" width="90" />
-    <el-table-column prop="pet_id" label="宠物 ID" width="90" />
-    <el-table-column label="日费" width="90">
-      <template #default="{ row }">{{ row.daily_fee != null ? `¥${row.daily_fee}/天` : "—" }}</template>
+    <el-table-column prop="user_id" label="客户 ID" width="90">
+      <template #default="{ row }"><span class="meta-cell">{{ row.user_id }}</span></template>
+    </el-table-column>
+    <el-table-column prop="pet_id" label="宠物 ID" width="90">
+      <template #default="{ row }"><span class="meta-cell">{{ row.pet_id ?? "—" }}</span></template>
+    </el-table-column>
+    <el-table-column label="日费" width="110">
+      <template #default="{ row }">
+        <span class="money-cell">{{ row.daily_fee != null ? `¥${row.daily_fee}` : "—" }}</span>
+        <span v-if="row.daily_fee != null" class="meta-cell"> /天</span>
+      </template>
     </el-table-column>
     <el-table-column label="状态" width="100">
       <template #default="{ row }">
@@ -61,7 +70,7 @@ defineExpose({ reload });
       </template>
     </el-table-column>
     <el-table-column prop="notes" label="备注" min-width="140">
-      <template #default="{ row }">{{ row.notes || "—" }}</template>
+      <template #default="{ row }"><span class="meta-cell">{{ row.notes || "—" }}</span></template>
     </el-table-column>
     <el-table-column label="操作" width="200" align="right">
       <template #default="{ row }">
@@ -79,5 +88,12 @@ defineExpose({ reload });
       </template>
     </el-table-column>
   </el-table>
-  <el-empty v-if="!boardingLoading && !boardings.length" description="暂无寄养订单" :image-size="70" />
+  <el-empty v-else-if="!boardingLoading" class="soft-empty" :image-size="84">
+    <template #description>
+      <p class="empty-title">暂无寄养订单</p>
+      <p class="empty-desc">用户预约寄养到本店后，入住和离店排期会列在这里。</p>
+    </template>
+  </el-empty>
+  </div>
+  </div>
 </template>

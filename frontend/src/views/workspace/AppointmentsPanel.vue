@@ -42,6 +42,7 @@ defineExpose({ reload, setFilter, setRowsIfPending });
 </script>
 
 <template>
+  <div>
   <el-alert
     type="info"
     :closable="false"
@@ -49,7 +50,7 @@ defineExpose({ reload, setFilter, setRowsIfPending });
     style="margin-bottom: 12px"
     title="用户在「预约到店」提交后会出现在这里。商家端只确认/完成，不能自己发起预约。"
   />
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+  <div class="panel-toolbar">
     <el-radio-group v-model="apptFilter" @change="reload">
       <el-radio-button value="">全部</el-radio-button>
       <el-radio-button value="pending">待处理</el-radio-button>
@@ -58,14 +59,17 @@ defineExpose({ reload, setFilter, setRowsIfPending });
       <el-radio-button value="cancelled">已取消</el-radio-button>
     </el-radio-group>
   </div>
-  <el-table v-loading="apptLoading" :data="appointments" style="width: 100%">
+  <div class="sheet" v-loading="apptLoading">
+  <el-table v-if="appointments.length" :data="appointments" style="width: 100%">
     <el-table-column prop="appt_time" label="时间" width="160">
       <template #default="{ row }">{{ fmtDate(row.appt_time) }}</template>
     </el-table-column>
     <el-table-column label="类型" width="90">
       <template #default="{ row }">{{ APPT_TYPES[row.appt_type] ?? row.appt_type }}</template>
     </el-table-column>
-    <el-table-column prop="user_id" label="客户 ID" width="90" />
+    <el-table-column prop="user_id" label="客户 ID" width="90">
+      <template #default="{ row }"><span class="meta-cell">{{ row.user_id }}</span></template>
+    </el-table-column>
     <el-table-column label="宠物" min-width="120">
       <template #default="{ row }">{{ row.pet_name || (row.pet_id ? `#${row.pet_id}` : "—") }}</template>
     </el-table-column>
@@ -75,7 +79,7 @@ defineExpose({ reload, setFilter, setRowsIfPending });
       </template>
     </el-table-column>
     <el-table-column prop="notes" label="备注" min-width="140">
-      <template #default="{ row }">{{ row.notes || "—" }}</template>
+      <template #default="{ row }"><span class="meta-cell">{{ row.notes || "—" }}</span></template>
     </el-table-column>
     <el-table-column label="操作" width="200" align="right">
       <template #default="{ row }">
@@ -93,5 +97,12 @@ defineExpose({ reload, setFilter, setRowsIfPending });
       </template>
     </el-table-column>
   </el-table>
-  <el-empty v-if="!apptLoading && !appointments.length" description="暂无预约" :image-size="70" />
+  <el-empty v-else-if="!apptLoading" class="soft-empty" :image-size="84">
+    <template #description>
+      <p class="empty-title">暂无预约</p>
+      <p class="empty-desc">当前筛选下没有记录。用户提交到店预约后会出现在这里。</p>
+    </template>
+  </el-empty>
+  </div>
+  </div>
 </template>

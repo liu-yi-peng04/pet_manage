@@ -62,6 +62,7 @@ defineExpose({ reload });
 </script>
 
 <template>
+  <div>
   <el-alert
     type="warning"
     :closable="false"
@@ -69,13 +70,20 @@ defineExpose({ reload });
     style="margin-bottom: 12px"
     title="宠物店不负责接种，只做中转：发现客户疫苗临期后，代约到合作医院；医院在「预约处理台」确认并完成接种。"
   />
-  <el-table v-loading="recallLoading" :data="recalls" style="width: 100%">
+  <div class="sheet" v-loading="recallLoading">
+  <el-table v-if="recalls.length" :data="recalls" style="width: 100%">
     <el-table-column prop="owner_name" label="主人" width="110" />
     <el-table-column prop="pet_name" label="宠物" width="110" />
     <el-table-column prop="vaccine_name" label="疫苗" min-width="140" />
-    <el-table-column prop="next_due_date" label="到期日" width="120" />
-    <el-table-column label="状态" width="100">
-      <template #default="{ row }">{{ row.status === "overdue" ? "已过期" : "临期" }} {{ row.days_left }}天</template>
+    <el-table-column prop="next_due_date" label="到期日" width="120">
+      <template #default="{ row }"><span class="meta-cell">{{ row.next_due_date }}</span></template>
+    </el-table-column>
+    <el-table-column label="状态" width="120">
+      <template #default="{ row }">
+        <el-tag size="small" :type="row.status === 'overdue' ? 'danger' : 'warning'" effect="plain">
+          {{ row.status === "overdue" ? "已过期" : "临期" }} {{ row.days_left }}天
+        </el-tag>
+      </template>
     </el-table-column>
     <el-table-column label="操作" width="150" align="right">
       <template #default="{ row }">
@@ -83,7 +91,14 @@ defineExpose({ reload });
       </template>
     </el-table-column>
   </el-table>
-  <el-empty v-if="!recallLoading && !recalls.length" description="暂无临期疫苗客户" :image-size="70" />
+  <el-empty v-else-if="!recallLoading" class="soft-empty" :image-size="84">
+    <template #description>
+      <p class="empty-title">暂无临期疫苗客户</p>
+      <p class="empty-desc">临期或过期的疫苗会列在这里，方便代约到合作医院。</p>
+    </template>
+  </el-empty>
+  </div>
+  </div>
 
   <el-dialog v-model="showInviteDialog" title="代约医院接种（中转）" width="480px">
     <el-alert
