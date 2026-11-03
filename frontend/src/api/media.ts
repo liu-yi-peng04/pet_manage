@@ -20,10 +20,14 @@ export async function uploadMedia(
   return http.post(`/media/upload?purpose=${purpose}`, fd) as Promise<MediaOut>;
 }
 
-/** 外链保持原样；相对路径补全，便于展示 */
+/** 外链保持原样；本站 /api/media 补上登录令牌，供 img 标签读取受保护图片 */
 export function mediaSrc(url: string | null | undefined, fallback = ""): string {
   if (!url) return fallback;
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
-  if (url.startsWith("/")) return url;
-  return `/${url}`;
+  const resolved = url.startsWith("/") ? url : `/${url}`;
+  if (!resolved.startsWith("/api/media/") || resolved.includes("access_token=")) return resolved;
+  const token = localStorage.getItem("token");
+  if (!token) return resolved;
+  const join = resolved.includes("?") ? "&" : "?";
+  return `${resolved}${join}access_token=${encodeURIComponent(token)}`;
 }

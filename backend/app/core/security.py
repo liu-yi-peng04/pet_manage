@@ -1,14 +1,11 @@
 from datetime import datetime, timedelta, timezone
 import hashlib
-import os
 import re
 
 import bcrypt
 import jwt
 
 from app.core.config import get_settings
-
-settings = get_settings()
 
 # 哈希方案前缀标记：新版用 bcrypt，旧版用 pbkdf2（保留兼容）
 BCRYPT_PREFIX = "$bcrypt$"
@@ -36,6 +33,7 @@ def verify_password(password: str, stored: str) -> bool:
 
 
 def create_access_token(user_id: int | str, username: str | None = None) -> str:
+    settings = get_settings()
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
@@ -50,6 +48,7 @@ def create_access_token(user_id: int | str, username: str | None = None) -> str:
 
 def decode_access_token(token: str) -> dict | None:
     """校验并解析 token，失败或过期返回 None。"""
+    settings = get_settings()
     try:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
     except jwt.PyJWTError:

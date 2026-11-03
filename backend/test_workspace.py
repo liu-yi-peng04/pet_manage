@@ -1,3 +1,4 @@
+# 需要后端以 APP_ENV=demo 启动，否则演示账号不会被种子写入。
 import json
 import urllib.request
 

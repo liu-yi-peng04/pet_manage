@@ -15,13 +15,18 @@ from app.schemas.schemas import ChangePassword, Token, UserCreate, UserIn, UserO
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+# 媒体等必须同时接受查询参数令牌的接口使用；缺省不自动 401
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 settings = get_settings()
 
 # 目标路由别名：满足对外 /register /login /users/me 的 RESTful 约定
 router_alias = APIRouter(prefix="", tags=["auth"])
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+async def authenticate_token(token: str | None) -> User:
+    """校验 JWT。调用方可以来自 Authorization 头或 access_token 查询参数。"""
+    if not token:
+        raise HTTPException(status_code=401, detail="需要登录后访问")
     payload = decode_access_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="无效或过期的凭证")
@@ -32,6 +37,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         return await User.get(id=int(user_id))
     except DoesNotExist:
         raise HTTPException(status_code=401, detail="用户不存在")
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+    return await authenticate_token(token)
 
 
 @router.post("/register", response_model=UserOut)
