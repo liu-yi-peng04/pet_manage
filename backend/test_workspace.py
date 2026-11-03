@@ -1,3 +1,9 @@
+"""手工隔离脚本（需本机已启动 http://127.0.0.1:8000）。
+
+可重复跑的版本在 backend/tests/，用 pytest + 一次性 SQLite，不依赖本机服务。
+见 backend/tests/缺口清单.md。
+"""
+
 import json
 import urllib.request
 
