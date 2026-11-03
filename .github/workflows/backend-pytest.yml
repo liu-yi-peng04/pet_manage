@@ -1,0 +1,26 @@
+name: Backend pytest
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-test.txt
+
+      - name: 安装测试依赖
+        run: python -m pip install -r requirements-test.txt
+
+      - name: 运行 pytest
+        run: python -m pytest
